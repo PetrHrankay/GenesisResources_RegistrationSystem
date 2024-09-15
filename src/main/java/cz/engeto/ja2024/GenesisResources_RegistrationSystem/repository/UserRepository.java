@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.util.UUID;
 
 @Repository
 public class UserRepository {
@@ -16,6 +17,12 @@ public class UserRepository {
     public UserRepository(@Autowired final DatabaseConfiguration databaseConfiguration) {
         this.databaseConfiguration = databaseConfiguration;
     }
+
+    public String generateUUID() {
+        return UUID.randomUUID().toString();
+    }
+
+
 
 }
 

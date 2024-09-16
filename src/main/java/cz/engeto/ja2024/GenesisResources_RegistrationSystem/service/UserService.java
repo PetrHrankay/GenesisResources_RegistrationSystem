@@ -42,4 +42,25 @@ public class UserService {
             e.printStackTrace();
         }
     }
+
+    public List<String> getUsedPersonIdFromDatabase() {
+        List<String> personIds = new ArrayList<>();
+
+        String query = "SELECT person_id FROM users";
+
+        try (Connection connection = databaseConfiguration.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                String personId = resultSet.getString("person_id");
+                personIds.add(personId);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error while fetching person_id", e);
+        }
+        return personIds;
+    }
 }

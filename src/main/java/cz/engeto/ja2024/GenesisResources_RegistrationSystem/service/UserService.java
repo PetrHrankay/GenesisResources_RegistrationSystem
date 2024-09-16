@@ -1,5 +1,7 @@
 package cz.engeto.ja2024.GenesisResources_RegistrationSystem.service;
 
+import cz.engeto.ja2024.GenesisResources_RegistrationSystem.utils.FileManager;
+import cz.engeto.ja2024.GenesisResources_RegistrationSystem.utils.Settings;
 import cz.engeto.ja2024.GenesisResources_RegistrationSystem.databaseconfiguration.DatabaseConfiguration;
 import cz.engeto.ja2024.GenesisResources_RegistrationSystem.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,20 +19,23 @@ public class UserService {
     private final DatabaseConfiguration databaseConfiguration;
 
     public UserService(@Autowired final DatabaseConfiguration databaseConfiguration) {
-            this.databaseConfiguration = databaseConfiguration;
-        }
+        this.databaseConfiguration = databaseConfiguration;
+    }
 
     public String generateUUID() {
         return UUID.randomUUID().toString();
     }
 
     public void createUser(User user) {
+        String availablePersonId = assignPersonIdToUser();
+        user.setPersonId(availablePersonId);
+
         String query = "INSERT INTO users (name, surname, person_id, uuid) VALUES (?, ?, ?, ?)";
 
-        try(Connection connection = databaseConfiguration.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = databaseConfiguration.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
-            statement.setString(1,user.getName());
+            statement.setString(1, user.getName());
             statement.setString(2, user.getSurname());
             statement.setString(3, user.getPersonId());
             statement.setString(4, generateUUID());
@@ -38,7 +43,7 @@ public class UserService {
             statement.executeUpdate();
             System.out.println("The user has been successfully saved to the database.");
 
-        }catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -62,5 +67,17 @@ public class UserService {
             throw new RuntimeException("Error while fetching person_id", e);
         }
         return personIds;
+    }
+
+    public String assignPersonIdToUser() {
+        List<String> usedPersonIds = getUsedPersonIdFromDatabase();
+        List<String> allPersonIdsFromFile = FileManager.loadPersonIdFromFile(Settings.PERSONIDFILENAME);
+
+        for (String personIdFromFile : allPersonIdsFromFile) {
+            if (!usedPersonIds.contains(personIdFromFile)) {
+                return personIdFromFile;
+            }
+        }
+        throw new RuntimeException("No available personId found.");
     }
 }

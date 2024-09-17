@@ -80,4 +80,26 @@ public class UserService {
         }
         throw new RuntimeException("No available personId found.");
     }
+
+    public User getUserById(long userId) throws SQLException {
+        String query = "SELECT id, name, surname FROM users WHERE id = ?";
+
+        try (Connection connection = databaseConfiguration.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setLong(1, userId);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+
+                if (resultSet.next()) {
+                    return new User(
+                            resultSet.getLong("id"),
+                            resultSet.getString("name"),
+                            resultSet.getString("surname"));
+                } else {
+                    return null;
+                }
+            }
+        }
+    }
 }

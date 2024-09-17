@@ -3,10 +3,9 @@ package cz.engeto.ja2024.GenesisResources_RegistrationSystem.controller;
 import cz.engeto.ja2024.GenesisResources_RegistrationSystem.model.User;
 import cz.engeto.ja2024.GenesisResources_RegistrationSystem.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
 
 @RestController
 @RequestMapping("api/v1")
@@ -24,7 +23,8 @@ public class UserController {
         userService.createUser(user);
     }
 
-
-
-
+    @GetMapping("user/{id}")
+    public User getUserById(@PathVariable("id") Long userId) throws SQLException {
+        return userService.getUserById(userId);
+    }
 }

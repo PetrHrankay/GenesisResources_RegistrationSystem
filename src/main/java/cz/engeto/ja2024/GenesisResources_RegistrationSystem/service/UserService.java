@@ -12,11 +12,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Logger;
 
 @Service
 public class UserService {
 
     private final DatabaseConfiguration databaseConfiguration;
+    Logger logger = Logger.getLogger(getClass().getName());
+
 
     public UserService(@Autowired final DatabaseConfiguration databaseConfiguration) {
         this.databaseConfiguration = databaseConfiguration;
@@ -41,7 +44,7 @@ public class UserService {
             statement.setString(4, generateUUID());
 
             statement.executeUpdate();
-            System.out.println("The user has been successfully saved to the database.");
+            logger.info("The user has been successfully saved to the database.");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -82,24 +85,44 @@ public class UserService {
     }
 
     public User getUserById(long userId) throws SQLException {
-        String query = "SELECT id, name, surname FROM users WHERE id = ?";
+        String query = "SELECT id, name, surname FROM users WHERE id = " + userId;
 
         try (Connection connection = databaseConfiguration.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            preparedStatement.setLong(1, userId);
-
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
-
                 if (resultSet.next()) {
                     return new User(
                             resultSet.getLong("id"),
                             resultSet.getString("name"),
                             resultSet.getString("surname"));
                 } else {
-                    return null;
+                    throw new SQLException("User with id: " + userId + " doesn't exist.");
                 }
             }
         }
     }
+
+    public User getUserByIdWithDetails(long userId) throws SQLException {
+        String query = "SELECT id, name, surname, person_id, uuid FROM users WHERE id = " + userId;
+
+        try (Connection connection = databaseConfiguration.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new User(
+                            resultSet.getLong("id"),
+                            resultSet.getString("name"),
+                            resultSet.getString("surname"),
+                            resultSet.getString("person_id"),
+                            resultSet.getString("uuid"));
+                } else {
+                    throw new SQLException("User with id: " + userId + " doesn't exist.");
+                }
+            }
+        }
+    }
+
+
 }

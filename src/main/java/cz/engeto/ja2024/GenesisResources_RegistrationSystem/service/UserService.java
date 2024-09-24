@@ -147,4 +147,29 @@ public class UserService {
         return out;
     }
 
+    public List<User> getAllUsersWithDetails() throws SQLException {
+        String query = "SELECT id, name, surname, person_id, uuid  FROM users";
+
+        List<User> out = new ArrayList<>();
+
+        try (Connection connection = databaseConfiguration.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                User user = new User(
+                        resultSet.getLong("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("surname"),
+                        resultSet.getString("person_id"),
+                        resultSet.getString("uuid")
+                );
+                out.add(user);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return out;
+    }
+
 }

@@ -172,4 +172,36 @@ public class UserService {
         return out;
     }
 
+    public void updateUser(User user) {
+        String query = "UPDATE users SET name = ?, surname = ? WHERE id = ?";
+
+        try (Connection connection = databaseConfiguration.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, user.getName());
+            preparedStatement.setString(2, user.getSurname());
+            preparedStatement.setLong(3, user.getId());
+
+            preparedStatement.executeUpdate();
+
+            logger.info("User has been updated.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteUser(long userId) {
+        String query = "DELETE FROM users WHERE id = " + userId;
+
+        try (Connection connection = databaseConfiguration.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
+

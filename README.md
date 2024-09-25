@@ -18,3 +18,7 @@ Each user is assigned a **personID** from a predefined list, and a **UUID** is g
 - The **Postman collection** (API test cases) and **SQL scripts** for database creation are located in the folder: `src/main/resources`.
 - The **database connection settings** and other configuration strings are defined in the `DatabaseConfiguration` class.
 
+### contact: 
+- Name: Petr Hrankay
+- Email: pean.tmc@seznam.cz
+- Discord: PETR H.

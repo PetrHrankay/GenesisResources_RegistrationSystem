@@ -1,5 +1,8 @@
 package cz.engeto.ja2024.GenesisResources_RegistrationSystem.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
 
     private long id;
@@ -9,6 +12,12 @@ public class User {
     private String uuid;
 
     public User() {
+    }
+
+    public User(long id, String name, String surname) {
+        this.id = id;
+        this.name = name;
+        this.surname = surname;
     }
 
     public User(long id, String name, String surname, String personId, String uuid) {

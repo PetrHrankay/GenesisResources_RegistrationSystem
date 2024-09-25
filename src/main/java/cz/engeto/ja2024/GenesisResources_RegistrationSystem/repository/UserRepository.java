@@ -1,17 +1,16 @@
 package cz.engeto.ja2024.GenesisResources_RegistrationSystem.repository;
 
 import cz.engeto.ja2024.GenesisResources_RegistrationSystem.databaseconfiguration.DatabaseConfiguration;
+import cz.engeto.ja2024.GenesisResources_RegistrationSystem.exceptions.UserRepositoryException;
 import cz.engeto.ja2024.GenesisResources_RegistrationSystem.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 @Repository
@@ -24,7 +23,7 @@ public class UserRepository {
         this.databaseConfiguration = databaseConfiguration;
     }
 
-    public void createUser(User user) {
+    public void createUser(User user) throws UserRepositoryException {
         String query = "INSERT INTO users (name, surname, person_id, uuid) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = databaseConfiguration.getConnection();
@@ -33,17 +32,19 @@ public class UserRepository {
             statement.setString(1, user.getName());
             statement.setString(2, user.getSurname());
             statement.setString(3, user.getPersonId());
-            statement.setString(4, generateUUID());
+            statement.setString(4, user.getUuid());
 
             statement.executeUpdate();
             logger.info("The user has been successfully saved to the database.");
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new UserRepositoryException("Database error while creating user", e);
+        }catch (RuntimeException e) {
+            throw new UserRepositoryException("Runtime error occurred while creating user", e);
         }
     }
 
-    public List<String> getUsedPersonIdFromDatabase() {
+    public List<String> getUsedPersonIdFromDatabase() throws UserRepositoryException {
         List<String> personIds = new ArrayList<>();
 
         String query = "SELECT person_id FROM users";
@@ -58,13 +59,12 @@ public class UserRepository {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error while loading person_id", e);
+            throw new UserRepositoryException("Database error while loading person_id", e);
         }
         return personIds;
     }
 
-    public User getUserById(long userId) throws SQLException {
+    public User getUserById(long userId) throws UserRepositoryException {
         String query = "SELECT id, name, surname FROM users WHERE id = ?";
 
         try (Connection connection = databaseConfiguration.getConnection();
@@ -79,13 +79,15 @@ public class UserRepository {
                             resultSet.getString("name"),
                             resultSet.getString("surname"));
                 } else {
-                    throw new SQLException("User with id: " + userId + " doesn't exist.");
+                    throw new UserRepositoryException("User with id: " + userId + " doesn't exist.");
                 }
             }
+        } catch (SQLException e) {
+            throw new UserRepositoryException("Database error while fetching user by id", e);
         }
     }
 
-    public User getUserByIdWithDetails(long userId) throws SQLException {
+    public User getUserByIdWithDetails(long userId) throws UserRepositoryException {
         String query = "SELECT id, name, surname, person_id, uuid FROM users WHERE id = ?";
 
         try (Connection connection = databaseConfiguration.getConnection();
@@ -102,13 +104,15 @@ public class UserRepository {
                             resultSet.getString("person_id"),
                             resultSet.getString("uuid"));
                 } else {
-                    throw new SQLException("User with id: " + userId + " doesn't exist.");
+                    throw new UserRepositoryException("User with id: " + userId + " doesn't exist.");
                 }
             }
+        } catch (SQLException e) {
+            throw new UserRepositoryException("Database error while fetching user details by id", e);
         }
     }
 
-    public List<User> getAllUsers() throws SQLException {
+    public List<User> getAllUsers() throws UserRepositoryException {
         String query = "SELECT id, name, surname FROM users";
 
         List<User> out = new ArrayList<>();
@@ -125,12 +129,12 @@ public class UserRepository {
                 out.add(user);
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new UserRepositoryException("Database error while fetching all users", e);
         }
         return out;
     }
 
-    public List<User> getAllUsersWithDetails() throws SQLException {
+    public List<User> getAllUsersWithDetails() throws UserRepositoryException {
         String query = "SELECT id, name, surname, person_id, uuid FROM users";
 
         List<User> out = new ArrayList<>();
@@ -149,12 +153,12 @@ public class UserRepository {
                 out.add(user);
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new UserRepositoryException("Database error while fetching all users", e);
         }
         return out;
     }
 
-    public void updateUser(User user) {
+    public void updateUser(User user) throws UserRepositoryException {
         String query = "UPDATE users SET name = ?, surname = ? WHERE id = ?";
 
         try (Connection connection = databaseConfiguration.getConnection();
@@ -168,11 +172,11 @@ public class UserRepository {
             logger.info("User has been updated.");
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new UserRepositoryException("Database error while updating user", e);
         }
     }
 
-    public void deleteUser(long userId) {
+    public void deleteUser(long userId) throws UserRepositoryException {
         String query = "DELETE FROM users WHERE id = ?";
 
         try (Connection connection = databaseConfiguration.getConnection();
@@ -180,13 +184,10 @@ public class UserRepository {
 
             preparedStatement.setLong(1, userId);
             preparedStatement.executeUpdate();
+            logger.info("User with id: " + userId + " has been deleted");
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new UserRepositoryException("Database error while deleting user with id: " + userId, e);
         }
-    }
-
-    private String generateUUID() {
-        return UUID.randomUUID().toString();
     }
 }
